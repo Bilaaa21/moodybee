@@ -1,33 +1,36 @@
+"use client";
 import MoodBanner from "@/app/components/MoodBanner";
 import MoodCalendar from "@/app/components/MoodCalendar";
 import MoodCount from "@/app/components/MoodCount";
 import QuoteCard from "@/app/components/QuoteCard";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Dashboard – Daylio",
-  description: "Track your daily mood",
-};
+import LogoutButton from "@/app/components/LogoutButton";
 
 export default function DashboardPage() {
   return (
-    <main className="min-h-screen bg-white pb-10 overflow-x-hidden">
-      {/* Banner is outside max-w wrapper so its background spans full width */}
+    <main className="min-h-screen bg-[#F8FAF5] pb-10">
       <MoodBanner />
-
-      {/* Unified content area matching the Figma layout, constrained in center */}
-      <div className="w-full mt-6 px-4 sm:mt-10 sm:px-8 flex flex-col gap-6 sm:flex-row sm:gap-6">
-        {/* Calendar Column */}
-        <div className="grid w-full grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 sm:w-[80%]">
-          <MoodCalendar year={2026} month={2} /> {/* March */}
-          <MoodCalendar year={2026} month={3} /> {/* April */}
+      
+      {/* Container Utama */}
+      <div className="max-w-[1440px] mx-auto mt-10 px-8 flex flex-col lg:flex-row gap-8 justify-center items-start">
+        
+        {/* Kolom Kalender (Kiri) */}
+        <div className="flex-1 w-full flex justify-center">
+          <MoodCalendar /> 
         </div>
 
-        {/* Right column */}
-        <div className="flex w-full flex-col gap-6 sm:w-[20%]">
-          <MoodCount />
+        {/* Kolom Kanan (Statistik, Quote, & Logout) */}
+        <div className="w-full lg:w-[380px] flex flex-col gap-6">
+          <MoodCount year={2026} month={3} />
           <QuoteCard />
+
+          {/* Navigasi Logout - Nempel di bawah, rata kanan */}
+          <div className="flex justify-end mt-4">
+            <div className="w-fit"> 
+               <LogoutButton />
+            </div>
+          </div>
         </div>
+
       </div>
     </main>
   );

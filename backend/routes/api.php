@@ -4,6 +4,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\MoodLogController;
+use App\Http\Controllers\Api\MoodStatController;
+use App\Http\Controllers\Api\QuoteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,46 +18,42 @@ use App\Http\Controllers\Api\AuthController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// --- 2. EMAIL VERIFICATION HANDLER (DIPERBAIKI) ---
-// Kita gunakan Request biasa, bukan EmailVerificationRequest agar tidak butuh login
+// --- 2. EMAIL VERIFICATION (DIPERBAIKI UNTUK AUTO-LOGIN) ---
 Route::get('/email/verify/{id}/{hash}', function (Request $request) {
-    
-    // 1. Cari user berdasarkan ID dari URL (sesuaikan dengan primary key id_user)
+    // Cari user menggunakan find() (karena primary key sudah diset di Model)
     $user = User::find($request->route('id'));
-
-    // 2. Jika user tidak ada
-    if (!$user) {
-        return redirect('http://localhost:3000/login?error=user_not_found');
-    }
-
-    // 3. Validasi Hash keamanan (Memastikan link tidak dimanipulasi)
+    
+    if (!$user) return redirect('http://localhost:3000/login?error=user_not_found');
+    
+    // Validasi Hash
     if (!hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {
         return redirect('http://localhost:3000/login?error=invalid_link');
     }
 
-    // 4. Jika sudah pernah verifikasi, langsung arahkan ke login
-    if ($user->hasVerifiedEmail()) {
-        return redirect('http://localhost:3000/login?verified=already');
-    }
-
-    // 5. Tandai email sebagai terverifikasi di database
-    if ($user->markEmailAsVerified()) {
-        // Trigger event jika dibutuhkan (opsional)
+    // Proses Verifikasi
+    if (!$user->hasVerifiedEmail()) {
+        $user->markEmailAsVerified();
         event(new \Illuminate\Auth\Events\Verified($user));
     }
 
-    // 6. Redirect ke Next.js dengan sukses
-    return redirect('http://localhost:3000/login?verified=true');
+    // --- LOGIKA AUTO LOGIN ---
+    // Buat token baru agar Next.js tidak perlu minta login lagi
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+    // Redirect langsung ke DASHBOARD (bukan login) sambil bawa token
+    return redirect("http://localhost:3000/dashboard?token={$token}&verified=true");
     
 })->middleware(['signed'])->name('verification.verify');
 
-// --- 3. PROTECTED ROUTES ---
+// --- 3. PROTECTED ROUTES (Hanya bisa diakses jika sudah login/punya token) ---
 Route::middleware('auth:sanctum')->group(function () {
+    
+    // Route User Info
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
 
-    // Route untuk kirim ulang email verifikasi
+    // Route Kirim Ulang Verifikasi
     Route::post('/email/verification-notification', function (Request $request) {
         if ($request->user()->hasVerifiedEmail()) {
             return response()->json(['message' => 'Email sudah terverifikasi.'], 400);
@@ -62,4 +61,17 @@ Route::middleware('auth:sanctum')->group(function () {
         $request->user()->sendEmailVerificationNotification();
         return response()->json(['message' => 'Link verifikasi baru telah dikirim!']);
     })->name('verification.send');
+
+    // --- FITUR MOOD (Punya Bila) ---
+    Route::prefix('mood')->group(function () {
+        Route::get('available', [MoodLogController::class, 'availableMoods']);
+        Route::post('entries', [MoodLogController::class, 'store']);
+        Route::get('entries', [MoodLogController::class, 'index']);
+        Route::get('stats', [MoodStatController::class, 'monthly']);
+    });
 });
+
+Route::middleware('auth:sanctum')->get('/mood/history', [MoodStatController::class, 'history']);
+
+// Quote Public
+Route::get('quotes/today', [QuoteController::class, 'today']);
