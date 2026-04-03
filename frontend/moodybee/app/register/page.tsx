@@ -10,15 +10,15 @@ export default function RegisterPage() {
     <main className="min-h-screen bg-white flex items-center justify-center p-4">
       {/* Main Register Card */}
       <div className="w-full max-w-sm bg-[#7CCC29] p-8 sm:p-10 rounded-[40px] shadow-lg flex flex-col items-center">
-        
+
         {/* Title */}
         <h1 className="text-white text-3xl sm:text-4xl font-extrabold mb-8 tracking-wide">
-          Register
+          Sign Up
         </h1>
 
         {/* Register Form Items */}
         <form className="w-full flex flex-col gap-5 sm:gap-6" action="/login">
-          
+
           {/* Email Input */}
           <input
             type="email"
