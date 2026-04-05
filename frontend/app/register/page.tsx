@@ -49,8 +49,8 @@ export default function RegisterPage() {
       const serverError = error.response?.data?.errors;
       if (serverError) {
         // Jika ada error spesifik seperti 'dob', ambil pesan pertamanya
-        const firstError = Object.values(serverError).flat();
-        setMessage(firstError as string);
+        const firstError = Object.values(serverError).flat()[0];
+        setMessage(String(firstError) || "Gagal mendaftar.");
       } else {
         setMessage(error.response?.data?.message || "Gagal mendaftar.");
       }

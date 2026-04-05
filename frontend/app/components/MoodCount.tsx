@@ -34,15 +34,14 @@ const DUMMY_STATS: MoodCount[] = [
   { id_mood: 5, nama_mood: "Sad",     icon: "sad",     level_mood: 1, count: 0 },
 ];
 
-export default function MoodCount() {
+export default function MoodCount({ year, month }: { year: number; month: number }) {
   const [counts, setCounts]   = useState<MoodCount[]>(DUMMY_STATS);
   const [loading, setLoading] = useState(true);
 
   const refreshMoodStats = async () => {
     setLoading(true);
-    const now = new Date();
     try {
-      const data = await fetchMoodStats(now.getFullYear(), now.getMonth() + 1);
+      const data = await fetchMoodStats(year, month);
       const sorted = [...data.counts].sort((a, b) => b.level_mood - a.level_mood);
       setCounts(sorted.length ? sorted : DUMMY_STATS);
     } catch (error) {
@@ -55,7 +54,7 @@ export default function MoodCount() {
 
   useEffect(() => {
     refreshMoodStats();
-  }, []);
+  }, [year, month]);
 
   useEffect(() => {
     const onMoodSaved = (event: Event) => {
@@ -63,12 +62,8 @@ export default function MoodCount() {
       const { tanggal, icon } = event.detail ?? {};
       if (!tanggal || !icon) return;
 
-      const now = new Date();
-      const currentMonth = now.getMonth() + 1;
-      const currentYear = now.getFullYear();
-
-      const [year, month] = tanggal.split("-").map((v: string) => Number(v));
-      if (year !== currentYear || month !== currentMonth) return;
+      const [eventYear, eventMonth] = tanggal.split("-").map((v: string) => Number(v));
+      if (eventYear !== year || eventMonth !== month) return;
 
       setCounts((prev) => {
         let found = false;
@@ -90,7 +85,7 @@ export default function MoodCount() {
 
     window.addEventListener("mood-saved", onMoodSaved as EventListener);
     return () => window.removeEventListener("mood-saved", onMoodSaved as EventListener);
-  }, []);
+  }, [year, month]);
 
   // Saat loading atau data kosong, tampilkan data dummy dengan count 0 supaya layout tidak hilang
   const displayData = loading || counts.length === 0 ? DUMMY_STATS : counts;

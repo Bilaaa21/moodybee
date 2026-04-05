@@ -30,7 +30,7 @@ export default function LoginPage() {
 
       if (response.ok) {
         // Simpan token di browser supaya user tetap login
-        localStorage.setItem("token", data.access_token);
+        localStorage.setItem("AUTH_TOKEN", data.access_token);
         alert("Login Berhasil!");
         router.push("/dashboard"); // Pindah ke halaman dashboard
       } else {

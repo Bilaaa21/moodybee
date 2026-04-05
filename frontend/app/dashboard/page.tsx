@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import MoodBanner from "@/app/components/MoodBanner";
 import MoodCalendar from "@/app/components/MoodCalendar";
 import MoodCount from "@/app/components/MoodCount";
@@ -8,6 +9,12 @@ import Link from "next/link";
 import { IconBook, IconCirclePlus, IconDocument } from "@/app/components/icons";
 
 export default function DashboardPage() {
+  const [currentDate, setCurrentDate] = useState({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 });
+
+  useEffect(() => {
+    const now = new Date();
+    setCurrentDate({ year: now.getFullYear(), month: now.getMonth() + 1 });
+  }, []);
   return (
     <main className="min-h-screen bg-[#F8FAF5] pb-32">
       <MoodBanner />
@@ -22,7 +29,7 @@ export default function DashboardPage() {
 
         {/* Kolom Kanan (Statistik, Quote, & Logout) */}
         <div className="w-full lg:w-[380px] flex flex-col gap-6">
-          <MoodCount year={2026} month={3} />
+          <MoodCount year={currentDate.year} month={currentDate.month} />
           <QuoteCard />
 
           {/* Navigasi Logout - Nempel di bawah, rata kanan */}

@@ -34,13 +34,19 @@ const API_BASE_URL =
   "http://127.0.0.1:8000/api";
 
 async function request<T>(input: string, init?: RequestInit): Promise<T> {
+  const token = typeof window !== "undefined" ? localStorage.getItem("AUTH_TOKEN") : null;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(init?.headers as Record<string, string>),
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const res = await fetch(input, {
     mode: "cors",
     cache: "no-cache",
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers as Record<string, string>),
-    },
+    headers,
     ...init,
   });
 

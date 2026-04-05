@@ -14,15 +14,6 @@ import {
   type MoodOption,
 } from "@/lib/api/mood";
 
-const IconHappy = ({ className, style }: IconProps) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
-    <circle cx="12" cy="12" r="10" strokeWidth="2" />
-    <path d="M7.5 9c.5-1 2-1 2.5 0" strokeWidth="2.5" />
-    <path d="M14 9c.5-1 2-1 2.5 0" strokeWidth="2.5" />
-    <path d="M7.5 12 h9 c0 3.5 -2 6 -4.5 6 S7.5 15.5 7.5 12 z" fill="currentColor" stroke="none" />
-  </svg>
-);
-
 const MOODS = [
   { id: "happy",   icon: IconHappy,   color: "#7CCC29", label: "Happy"   },
   { id: "good",    icon: IconGood,    color: "#8BC34A", label: "Good"    },
@@ -30,6 +21,8 @@ const MOODS = [
   { id: "bad",     icon: IconBad,     color: "#339AF0", label: "Bad"     },
   { id: "sad",     icon: IconSad,     color: "#3F51B5", label: "Sad"     },
 ];
+
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -51,6 +44,15 @@ export default function MoodCalendar({ year: propYear, month: propMonth }: MoodC
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay    = getFirstDayOfMonth(year, month);
   const monthName   = new Date(year, month, 1).toLocaleString("en-US", { month: "long" });
+
+  // Generate cells: array of day numbers, padded with nulls for empty slots
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < firstDay; i++) {
+    cells.push(null);
+  }
+  for (let day = 1; day <= daysInMonth; day++) {
+    cells.push(day);
+  }
 
   // key: "YYYY-MM-DD" → icon string ("happy", "good", dst)
   const [moods, setMoods]                   = useState<Record<string, string>>({});
@@ -122,18 +124,6 @@ export default function MoodCalendar({ year: propYear, month: propMonth }: MoodC
     }
   };
 
-  useEffect(() => {
-    const loadData = async () => {
-      const m1 = await fetchHistory(baseDate.getFullYear(), baseDate.getMonth() + 1);
-      const nextMonthDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 1);
-      const m2 = await fetchHistory(nextMonthDate.getFullYear(), nextMonthDate.getMonth() + 1);
-      setMoodHistory([...m1, ...m2]);
-    };
-    loadData();
-    const interval = setInterval(loadData, 4000); // Sinkron tiap 4 detik
-    return () => clearInterval(interval);
-  }, [baseDate]);
-
   return (
     <div className="relative w-full overflow-hidden rounded-[28px] bg-[#FDB813] shadow-md">
       <div className="bg-[#E59400] py-3 text-center">
@@ -180,8 +170,6 @@ export default function MoodCalendar({ year: propYear, month: propMonth }: MoodC
           })}
         </div>
       </div>
-    );
-  };
 
       {/* Mood Selector Modal — identik dengan versi asli */}
       {selectedDay !== null && (

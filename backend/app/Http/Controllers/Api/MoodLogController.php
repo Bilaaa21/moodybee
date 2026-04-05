@@ -18,8 +18,7 @@ class MoodLogController extends Controller
             'month' => ['required', 'integer', 'min:1', 'max:12'],
         ]);
 
-        // TODO (setelah auth di-push): $userId = $request->user()->id_user;
-        $userId = 1; // $request->user()->id_user;
+        $userId = $request->user()->id_user;
 
         $logs = MoodLog::forMonth($userId, $validated['year'], $validated['month'])
             ->with('mood:id_mood,nama_mood,icon,level_mood')
@@ -63,15 +62,7 @@ class MoodLogController extends Controller
         ]);
 
         // TODO (setelah auth di-push): $userId = $request->user()->id_user;
-        $userId = $request->user()->id_user ?? User::first()?->id_user;
-        if (!$userId) {
-            $user = User::factory()->create([
-                'username' => 'demo',
-                'email' => 'demo@example.com',
-                'password' => bcrypt('password'),
-            ]);
-            $userId = $user->id_user;
-        }
+        $userId = $request->user()->id_user;
 
         $tanggal = $validated['tanggal'] ?? now()->toDateString();
 
