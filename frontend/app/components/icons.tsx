@@ -1,4 +1,11 @@
-import { CSSProperties } from "react";
+import React, { CSSProperties } from "react";
+import * as LucideIcons from "lucide-react";
+
+interface LucideIconProps {
+  name: keyof typeof LucideIcons;
+  size?: number;
+  className?: string;
+}
 
 type IconProps = {
   className?: string;
@@ -62,14 +69,13 @@ export const IconSad = ({ className, style }: IconProps) => (
   </svg>
 );
 
-// Pensil untuk area input teks
 export const IconPencil = ({ className, style }: IconProps) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
-    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
+    <path d="M12 20h9" />
+    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
   </svg>
 );
 
-// Ikon Buku (Navbar Kiri)
 export const IconBook = ({ className, style }: IconProps) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
     <rect x="5" y="3" width="14" height="18" rx="2" ry="2" />
@@ -78,7 +84,6 @@ export const IconBook = ({ className, style }: IconProps) => (
   </svg>
 );
 
-// Ikon Lingkaran Tambah (Navbar Tengah)
 export const IconCirclePlus = ({ className, style }: IconProps) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
     <circle cx="12" cy="12" r="10" />
@@ -87,7 +92,6 @@ export const IconCirclePlus = ({ className, style }: IconProps) => (
   </svg>
 );
 
-// Ikon Dokumen (Navbar Kanan)
 export const IconDocument = ({ className, style }: IconProps) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -97,3 +101,22 @@ export const IconDocument = ({ className, style }: IconProps) => (
     <polyline points="10 9 9 9 8 9" />
   </svg>
 );
+
+export const IconArrowLeft = ({ className, style }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
+    <line x1="19" y1="12" x2="5" y2="12"></line>
+    <polyline points="12 19 5 12 12 5"></polyline>
+  </svg>
+);
+
+const Icon: React.FC<LucideIconProps> = ({ name, size = 24, className }) => {
+  const IconComponent = LucideIcons[name] as React.ComponentType<{ size?: number; className?: string }>;
+
+  if (!IconComponent) {
+    return <div>Icon not found</div>;
+  }
+
+  return <IconComponent size={size} className={className} />;
+};
+
+export default Icon;

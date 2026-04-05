@@ -100,7 +100,7 @@ export default function JournalPage() {
         {/* Left: "Moodybee" badge, same style as "My Diaries" */}
         <Link href="/dashboard">
           <div className="bg-[#FDB813] text-white font-extrabold tracking-wide text-[22px] px-10 pt-6 pb-6 rounded-br-[36px] shadow-sm lg:px-16 lg:pt-8 lg:pb-8 lg:text-3xl lg:rounded-br-[48px] hover:brightness-105 transition-all">
-            My Journal
+            My Diaries
           </div>
         </Link>
 

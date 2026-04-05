@@ -35,7 +35,8 @@ export default function DiaryPage() {
         {/* Diary Collection Cards */}
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 pb-16 pt-4">
           {['Koleksi Diaries A', 'Koleksi Diaries B', 'Koleksi Diaries C'].map((title, idx) => (
-            <div
+            <Link
+              href={`/diary/${idx + 1}`}
               key={idx}
               className="w-full h-[190px] sm:h-[220px] bg-white rounded-[32px] sm:rounded-[44px] flex items-center justify-center transition-transform hover:-translate-y-2 cursor-pointer"
               style={{
@@ -45,26 +46,22 @@ export default function DiaryPage() {
               <h3 className="font-extrabold text-black text-[17px] sm:text-[20px] tracking-wide text-center px-4">
                 {title}
               </h3>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
 
       {/* Bottom Nav Bar */}
-      <div className="fixed bottom-0 left-0 right-0 w-full bg-white pb-6 pt-6 px-10 flex items-center justify-around z-50">
-        <button className="p-2 transition-transform hover:scale-110 active:scale-95 group">
-          <IconBook className="h-[46px] w-[46px] sm:h-[56px] sm:w-[56px] text-[#7CCC29] stroke-[2px] group-hover:drop-shadow-sm" />
-        </button>
-        <button className="p-2 transition-transform hover:scale-110 active:scale-95 group">
-          <Link href="/dashboard" className="p-2 transition-transform hover:scale-110 active:scale-95 group">
-            <IconCirclePlus className="h-[60px] w-[60px] sm:h-[72px] sm:w-[72px] text-[#7CCC29] stroke-[2.5px] group-hover:drop-shadow-sm" />
-          </Link>
-        </button>
-        <button className="p-2 transition-transform hover:scale-110 active:scale-95 group">
-          <Link href="/journal" className="p-2 transition-transform hover:scale-110 active:scale-95 group">
-            <IconDocument className="h-[46px] w-[46px] sm:h-[56px] sm:w-[56px] text-[#7CCC29] stroke-[2px] group-hover:drop-shadow-sm" />
-          </Link>
-        </button>
+      <div className="fixed bottom-0 left-0 right-0 w-full bg-white pb-4 pt-4 px-10 flex items-center justify-around z-50 border-t border-gray-100">
+        <Link href="/diary" className="p-2 transition-transform hover:scale-110 active:scale-95 group">
+          <IconBook className="h-[36px] w-[36px] sm:h-[44px] sm:w-[44px] text-[#7CCC29] stroke-[2px] group-hover:drop-shadow-sm" />
+        </Link>
+        <Link href="/dashboard" className="p-2 transition-transform hover:scale-110 active:scale-95 group">
+          <IconCirclePlus className="h-[48px] w-[48px] sm:h-[58px] sm:w-[58px] text-[#7CCC29] stroke-[2.5px] group-hover:drop-shadow-sm" />
+        </Link>
+        <Link href="/activities" className="p-2 transition-transform hover:scale-110 active:scale-95 group">
+          <IconDocument className="h-[36px] w-[36px] sm:h-[44px] sm:w-[44px] text-[#7CCC29] stroke-[2px] group-hover:drop-shadow-sm" />
+        </Link>
       </div>
 
       {/* Add custom CSS class to hide scrollbar for horizontal cards component */}
