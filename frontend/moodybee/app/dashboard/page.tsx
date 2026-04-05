@@ -2,7 +2,6 @@ import MoodBanner from "@/app/components/MoodBanner";
 import MoodCalendar from "@/app/components/MoodCalendar";
 import MoodCount from "@/app/components/MoodCount";
 import QuoteCard from "@/app/components/QuoteCard";
-import { IconPencil, IconBook, IconCirclePlus, IconDocument } from "@/app/components/icons";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

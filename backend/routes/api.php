@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\MoodLogController;
 use App\Http\Controllers\Api\MoodStatController;
 use App\Http\Controllers\Api\QuoteController;
+use App\Http\Controllers\Api\DatasetController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -39,17 +40,5 @@ Route::prefix('mood')->group(function () {
 // Quote tidak perlu auth (boleh public)
 Route::get('quotes/today', [QuoteController::class, 'today']);
 
-
-// ─── Setelah auth di-push: uncomment blok ini, hapus blok di atas ─────────
-/*
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::prefix('mood')->group(function () {
-        Route::get('available', [MoodLogController::class, 'availableMoods']);
-        Route::post('entries',  [MoodLogController::class, 'store']);
-        Route::get('entries',   [MoodLogController::class, 'index']);
-        Route::get('stats',     [MoodStatController::class, 'monthly']);
-    });
-});
-
-Route::get('quotes/today', [QuoteController::class, 'today']);
-*/
+// ini API untuk dataset
+Route::get('dataset', [DatasetController::class, 'index']);

@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 
 class MoodLogController extends Controller
 {
- 
+
     public function index(Request $request): JsonResponse
     {
         $validated = $request->validate([
