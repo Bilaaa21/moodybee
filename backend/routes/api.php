@@ -7,11 +7,11 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\MoodLogController;
 use App\Http\Controllers\Api\MoodStatController;
 use App\Http\Controllers\Api\QuoteController;
+use App\Http\Controllers\Api\JournalCollectionController;
+use App\Http\Controllers\Api\JournalController;
 
 /*
 |--------------------------------------------------------------------------
-<<<<<<< HEAD
-| API Routes — Mood Tracker Dashboard
 | API Routes
 |--------------------------------------------------------------------------
 */
@@ -20,42 +20,39 @@ use App\Http\Controllers\Api\QuoteController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// --- 2. EMAIL VERIFICATION (DIPERBAIKI UNTUK AUTO-LOGIN) ---
+// --- 2. EMAIL VERIFICATION ---
 Route::get('/email/verify/{id}/{hash}', function (Request $request) {
-    // Cari user menggunakan find() (karena primary key sudah diset di Model)
     $user = User::find($request->route('id'));
 
     if (!$user) return redirect('http://localhost:3000/login?error=user_not_found');
 
-    // Validasi Hash
     if (!hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {
         return redirect('http://localhost:3000/login?error=invalid_link');
     }
 
-    // Proses Verifikasi
     if (!$user->hasVerifiedEmail()) {
         $user->markEmailAsVerified();
         event(new \Illuminate\Auth\Events\Verified($user));
     }
 
-    // --- LOGIKA AUTO LOGIN ---
-    // Buat token baru agar Next.js tidak perlu minta login lagi
     $token = $user->createToken('auth_token')->plainTextToken;
 
-    // Redirect langsung ke DASHBOARD (bukan login) sambil bawa token
     return redirect("http://localhost:3000/dashboard?token={$token}&verified=true");
 
 })->middleware(['signed'])->name('verification.verify');
 
-// --- 3. PROTECTED ROUTES (Hanya bisa diakses jika sudah login/punya token) ---
+// --- 3. PUBLIC ---
+Route::get('quotes/today', [QuoteController::class, 'today']);
+
+// --- 4. PROTECTED ---
 Route::middleware('auth:sanctum')->group(function () {
 
-    // Route User Info
+    // User info
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
 
-    // Route Kirim Ulang Verifikasi
+    // Kirim ulang verifikasi
     Route::post('/email/verification-notification', function (Request $request) {
         if ($request->user()->hasVerifiedEmail()) {
             return response()->json(['message' => 'Email sudah terverifikasi.'], 400);
@@ -64,17 +61,26 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json(['message' => 'Link verifikasi baru telah dikirim!']);
     })->name('verification.send');
 
-    // --- FITUR MOOD (Punya Bila) ---
+    // Mood punya bila
     Route::prefix('mood')->group(function () {
         Route::get('available', [MoodLogController::class, 'availableMoods']);
-        Route::post('entries', [MoodLogController::class, 'store']);
-        Route::get('entries', [MoodLogController::class, 'index']);
-        Route::get('stats', [MoodStatController::class, 'monthly']);
+        Route::post('entries',  [MoodLogController::class, 'store']);
+        Route::get('entries',   [MoodLogController::class, 'index']);
+        Route::get('stats',     [MoodStatController::class, 'monthly']);
+    });
+
+    // Mood history
+    Route::get('/mood/history', [MoodStatController::class, 'history']);
+
+    // Journal fitur bila
+    Route::prefix('journal')->group(function () {
+        Route::get('collections',               [JournalCollectionController::class, 'index']);
+        Route::post('collections',              [JournalCollectionController::class, 'store']);
+        Route::delete('collections/{id}',       [JournalCollectionController::class, 'destroy']);
+        Route::get('collections/{id}/journals', [JournalController::class, 'index']);
+        Route::get('journals/{id}',             [JournalController::class, 'show']);
+        Route::post('journals',                 [JournalController::class, 'store']);
+        Route::put('journals/{id}',             [JournalController::class, 'update']);
+        Route::delete('journals/{id}',          [JournalController::class, 'destroy']);
     });
 });
-
-Route::middleware('auth:sanctum')->get('/mood/history', [MoodStatController::class, 'history']);
-
-// Quote Public
-Route::get('quotes/today', [QuoteController::class, 'today']);
-
