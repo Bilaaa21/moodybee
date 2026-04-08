@@ -59,25 +59,29 @@ export default function MoodCount({ year, month }: { year: number; month: number
   useEffect(() => {
     const onMoodSaved = (event: Event) => {
       if (!(event instanceof CustomEvent)) return;
-      const { tanggal, icon } = event.detail ?? {};
+      const { tanggal, icon, prevIcon } = event.detail ?? {};
       if (!tanggal || !icon) return;
 
       const [eventYear, eventMonth] = tanggal.split("-").map((v: string) => Number(v));
       if (eventYear !== year || eventMonth !== month) return;
 
       setCounts((prev) => {
-        let found = false;
+        let changed = false;
         const next = prev.map((m) => {
           if (m.icon === icon) {
-            found = true;
+            changed = true;
             return { ...m, count: m.count + 1 };
+          }
+          if (prevIcon && m.icon === prevIcon && prevIcon !== icon) {
+            changed = true;
+            return { ...m, count: Math.max(0, m.count - 1) };
           }
           return m;
         });
 
-        if (found) return next;
+        if (changed) return next;
 
-        // Kalau belum ada icon di array (seharusnya tidak), refresh dari API
+        // Kalau mood tidak cocok dengan data lokal, tarik ulang dari API supaya pasti sinkron
         refreshMoodStats();
         return prev;
       });

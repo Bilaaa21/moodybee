@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/app/components/ToastProvider";
 
 export default function LoginPage() {
   const [username, setUsername] = useState(""); // Laravel biasanya pake email, kalau mau username tinggal ganti
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const toast = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,14 +32,14 @@ export default function LoginPage() {
 
       if (response.ok) {
         // Simpan token di browser supaya user tetap login
-        localStorage.setItem("AUTH_TOKEN", data.access_token);
-        alert("Login Berhasil!");
+        localStorage.setItem("auth_token", data.access_token);
+        toast.notify("Login Berhasil!", "success");
         router.push("/dashboard"); // Pindah ke halaman dashboard
       } else {
-        alert(data.message || "Login Gagal!");
+        toast.notify(data.message || "Login Gagal!", "error");
       }
     } catch (error) {
-      alert("Gagal konek ke server Laravel. Pastikan 'php artisan serve' jalan!");
+      toast.notify("Gagal konek ke server Laravel. Pastikan 'php artisan serve' jalan!", "error");
     } finally {
       setLoading(false);
     }

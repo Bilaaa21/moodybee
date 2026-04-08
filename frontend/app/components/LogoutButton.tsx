@@ -9,6 +9,7 @@ export default function LogoutButton() {
 
   const handleLogout = () => {
     // 1. Hapus token dari localStorage
+    localStorage.removeItem("auth_token");
     localStorage.removeItem("AUTH_TOKEN");
     
     // 2. Tutup modal

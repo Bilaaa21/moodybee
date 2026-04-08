@@ -49,7 +49,7 @@ export default function MoodBanner() {
   useEffect(() => {
     // Fetch user info
     const fetchUser = async () => {
-      const token = localStorage.getItem("AUTH_TOKEN");
+      const token = localStorage.getItem("auth_token") || localStorage.getItem("AUTH_TOKEN");
       if (!token) return;
 
       try {
@@ -86,7 +86,9 @@ export default function MoodBanner() {
 
   const handleSelectMood = async (mood: MoodOption) => {
     if (saving) return;
+    if (selectedIcon === mood.icon) return;
 
+    const previousIcon = selectedIcon;
     setSelectedIcon(mood.icon); // optimistic
     setSaving(true);
     try {
@@ -95,12 +97,16 @@ export default function MoodBanner() {
       const today = new Date().toISOString().slice(0, 10);
       window.dispatchEvent(
         new CustomEvent("mood-saved", {
-          detail: { tanggal: today, icon: mood.icon },
+          detail: {
+            tanggal: today,
+            icon: mood.icon,
+            prevIcon: previousIcon,
+          },
         })
       );
     } catch (err) {
       console.error("Gagal menyimpan mood:", err);
-      setSelectedIcon(null); // rollback
+      setSelectedIcon(previousIcon); // rollback
     } finally {
       setSaving(false);
     }

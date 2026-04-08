@@ -13,6 +13,7 @@ export default function AuthHandler() {
 
     if (token) {
       // 1. Simpan token ke localStorage supaya user dianggap login oleh sistem
+      localStorage.setItem("auth_token", token);
       localStorage.setItem("AUTH_TOKEN", token);
       
       // 2. (Opsional) Jika kamu simpan data user di state/context, bisa diupdate di sini

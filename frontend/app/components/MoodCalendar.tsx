@@ -103,6 +103,7 @@ export default function MoodCalendar({ year: propYear, month: propMonth }: MoodC
     if (!moodOption) return;
 
     const tanggal = `${year}-${String(month + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`;
+    const previousIcon = moods[tanggal] ?? null;
 
     // Optimistic update — UI langsung berubah, tidak tunggu API
     setMoods((prev) => ({ ...prev, [tanggal]: moodIconId }));
@@ -111,12 +112,25 @@ export default function MoodCalendar({ year: propYear, month: propMonth }: MoodC
     setSaving(true);
     try {
       await saveMoodEntry({ id_mood: moodOption.id_mood, tanggal });
+      window.dispatchEvent(
+        new CustomEvent("mood-saved", {
+          detail: {
+            tanggal,
+            icon: moodIconId,
+            prevIcon: previousIcon,
+          },
+        })
+      );
     } catch (err) {
       console.error("Gagal menyimpan mood:", err);
       // Rollback kalau gagal
       setMoods((prev) => {
         const next = { ...prev };
-        delete next[tanggal];
+        if (previousIcon) {
+          next[tanggal] = previousIcon;
+        } else {
+          delete next[tanggal];
+        }
         return next;
       });
     } finally {
