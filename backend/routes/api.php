@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\MoodStatController;
 use App\Http\Controllers\Api\QuoteController;
 use App\Http\Controllers\Api\JournalCollectionController;
 use App\Http\Controllers\Api\JournalController;
+use App\Http\Controllers\Api\ActivityController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,8 +45,30 @@ Route::get('/email/verify/{id}/{hash}', function (Request $request) {
 // --- 3. PUBLIC ---
 Route::get('quotes/today', [QuoteController::class, 'today']);
 
+// Debug: Get test token
+Route::get('/debug/login', function (Request $request) {
+    $user = User::where('username', 'test')->first();
+    if (!$user) {
+        return response()->json(['error' => 'Test user not found'], 404);
+    }
+    $token = $user->createToken('test_token')->plainTextToken;
+    return response()->json([
+        'access_token' => $token,
+        'user' => $user,
+    ]);
+});
+
 // --- 4. PROTECTED ---
 Route::middleware('auth:sanctum')->group(function () {
+
+    // Debug endpoint
+    Route::get('/debug/me', function (Request $request) {
+        return response()->json([
+            'status' => 'success',
+            'user' => $request->user(),
+            'auth_header' => $request->header('Authorization'),
+        ]);
+    });
 
     // User info
     Route::get('/user', function (Request $request) {
@@ -61,7 +84,7 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json(['message' => 'Link verifikasi baru telah dikirim!']);
     })->name('verification.send');
 
-    // Mood punya bila
+    // Mood fitur
     Route::prefix('mood')->group(function () {
         Route::get('available', [MoodLogController::class, 'availableMoods']);
         Route::post('entries',  [MoodLogController::class, 'store']);
@@ -72,7 +95,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Mood history
     Route::get('/mood/history', [MoodStatController::class, 'history']);
 
-    // Journal fitur bila
+    // Journal fitur
     Route::prefix('journal')->group(function () {
         Route::get('collections',               [JournalCollectionController::class, 'index']);
         Route::post('collections',              [JournalCollectionController::class, 'store']);
@@ -82,5 +105,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('journals',                 [JournalController::class, 'store']);
         Route::put('journals/{id}',             [JournalController::class, 'update']);
         Route::delete('journals/{id}',          [JournalController::class, 'destroy']);
+    });
+
+     // Activities
+    Route::prefix('activities')->group(function () {
+        Route::get('/',         [ActivityController::class, 'index']);   // GET  /activities
+        Route::post('/attach',  [ActivityController::class, 'attach']);  // POST /activities/attach
+        Route::get('/history',  [ActivityController::class, 'history']); // GET  /activities/history
+        Route::get('/logs',     [ActivityController::class, 'logs']);    // GET  /activities/logs
+        Route::post('/logs',    [ActivityController::class, 'storeLog']); // POST /activities/logs
     });
 });

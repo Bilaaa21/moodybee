@@ -34,4 +34,6 @@ class MoodLog extends Model
             ->whereYear('tanggal', $year)
             ->whereMonth('tanggal', $month);
     }
+
+    
 }

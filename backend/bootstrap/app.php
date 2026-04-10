@@ -17,12 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Kalau request ke /api/* tidak punya token atau token invalid,
-        // kembalikan JSON 401 — bukan redirect ke route 'login' yang tidak ada
+        // Handle unauthenticated API requests with JSON response instead of redirect
         $exceptions->render(function (AuthenticationException $e, Request $request) {
-            if ($request->is('api/*')) {
+            if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
-                    'message' => 'Unauthenticated. Silakan login terlebih dahulu.',
+                    'message' => 'Unauthenticated',
+                    'error' => 'Invalid or missing authentication token',
                 ], 401);
             }
         });

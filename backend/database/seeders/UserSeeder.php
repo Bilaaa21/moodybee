@@ -14,8 +14,9 @@ class UserSeeder extends Seeder
             'username' => 'test',
             'email' => 'test@test.com',
             'password' => bcrypt('123456'),
-            'gender' => 'laki-laki',
-            'tanggal_lahir' => '2000-01-01'
+            'gender' => 'Laki-laki',
+            'tanggal_lahir' => '2000-01-01',
+            'email_verified_at' => now(),
         ]);
     }
 }

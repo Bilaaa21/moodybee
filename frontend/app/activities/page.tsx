@@ -1,19 +1,19 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { IconBook, IconCirclePlus, IconDocument } from "@/app/components/icons";
 import Link from "next/link";
 import {
   Bed,
   Utensils,
-  BookOpen,
+  Dumbbell,
   Music,
   Sun,
   Coffee,
-  Dumbbell,
   HeartPulse,
+  BookOpen,
   Bike,
   Pencil,
-  Gamepad2,
+  Gamepad,
   ShoppingBag,
   Users,
   Plane,
@@ -23,20 +23,93 @@ import {
   Smile,
   Star,
   Moon,
-  BookMarked,
-  Tv2,
+  Bookmark,
+  Tv,
   UtensilsCrossed,
   Headphones,
+  Dog,
+  Bath,
+  Baby,
+  Glasses,
+  Scissors,
+  Flower,
+  Wind,
+  Umbrella
 } from "lucide-react";
 
-// Daylio-style activity icons sets
-const ACTIVITY_ICONS_SET_1 = [Bed, Utensils, Dumbbell, Music, Sun, Coffee, HeartPulse, BookOpen];
-const ACTIVITY_ICONS_SET_2 = [Bike, Pencil, Gamepad2, ShoppingBag, Users, Plane, TreePine, Home];
-const ACTIVITY_ICONS_SET_3 = [Stethoscope, Smile, Star, Moon, BookMarked, Tv2, UtensilsCrossed, Headphones];
+interface ActivityLog {
+  id: number;
+  activities: {
+    id: number;
+    name: string;
+    icon: string;
+  }[];
+  description: string | null;
+  photo_url: string | null;
+  date: string;
+  created_at: string;
+}
+
+const iconMap = {
+  Bed, Utensils, Dumbbell, Music, Sun, Coffee, HeartPulse, BookOpen, Bike, Pencil, Gamepad, ShoppingBag, Users, Plane, TreePine, Home, Stethoscope, Smile, Star, Moon, Bookmark, Tv, UtensilsCrossed, Headphones, Dog, Bath, Baby, Glasses, Scissors, Flower, Wind, Umbrella
+};
 
 export default function ActivitiesPage() {
-  const loremText =
-    "lorem ipsum color det sit amor widhi pacar martin jadi semua burger milik Allah dan sungai Amazon adalah sungai terbesar di dunia.";
+  const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchActivities();
+  }, []);
+
+  const fetchActivities = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        setError("No auth token found");
+        return;
+      }
+
+      const response = await fetch("http://localhost:8000/api/activities/logs", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch activities");
+      }
+
+      const data = await response.json();
+      setLogs(data.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getIconComponent = (iconName: string) => {
+    const IconComponent = (iconMap as any)[iconName];
+    return IconComponent ? <IconComponent className="w-6 h-6" /> : <div>?</div>;
+  };
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-gray-500">Loading activities...</div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-red-500">Error: {error}</div>
+      </main>
+    );
+  }
 
   return (
     <main className="relative min-h-screen bg-white w-full pb-32 overflow-x-hidden font-sans">
@@ -47,19 +120,19 @@ export default function ActivitiesPage() {
         </h1>
       </div>
 
-      {/* Top Right Add Button */}
+      {/* Top Right Create Button */}
       <div className="absolute top-6 right-6 sm:right-10 z-20">
         <Link
           href="/activities/create"
           className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full border-[3px] border-[#5ccc14] text-[#5ccc14] bg-white hover:bg-[#f6fff0] transition transform hover:scale-105"
         >
           <svg
-            width="34"
-            height="34"
+            width="30"
+            height="30"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2.5"
+            strokeWidth="3"
             strokeLinecap="round"
             strokeLinejoin="round"
           >
@@ -69,45 +142,54 @@ export default function ActivitiesPage() {
         </Link>
       </div>
 
-      {/* Main Content (Cards) */}
-      <div className="pt-32 pb-10 px-4 sm:px-8 md:px-14 max-w-8xl mx-auto flex flex-col gap-10">
-
-        {/* Red Card */}
-        <div className="flex bg-white rounded-[40px] border-[5px] sm:border-[6px] border-[#fb2828] w-full p-6 sm:p-8 md:p-10 shadow-[8px_10px_15px_rgba(0,0,0,0.15)] items-stretch">
-          <div className="w-[45%] flex items-center pr-2 sm:pr-8">
-            <ActivityIconGrid icons={ACTIVITY_ICONS_SET_1} />
+      {/* Content */}
+      <div className="pt-28 pb-10 px-4 sm:px-8 md:px-14 max-w-7xl mx-auto">
+        {logs.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-gray-500 text-lg">No activities logged this month.</p>
+            <Link
+              href="/activities/create"
+              className="inline-block mt-4 bg-[#ff7a00] text-white px-6 py-2 rounded-lg hover:bg-[#e66c00]"
+            >
+              Create Your First Activity
+            </Link>
           </div>
-          <div className="w-[55%] flex items-center justify-end">
-            <p className="text-right text-[#fb2828] font-black text-lg sm:text-[20px] md:text-[23px] leading-tight">
-              {loremText}
-            </p>
+        ) : (
+          <div className="grid gap-4">
+            {logs.map((log) => (
+              <div
+                key={log.id}
+                className="bg-white rounded-[30px] border-[4px] border-[#ff7a00] p-5 shadow-sm"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-[#ff7a00] rounded-full flex items-center justify-center text-white">
+                      {log.activities.length > 0 && getIconComponent(log.activities[0].icon)}
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-bold text-[#ff7a00]">
+                        {log.activities.map(a => a.name).join(', ')}
+                      </h3>
+                      <span className="text-sm text-gray-500">{log.date}</span>
+                    </div>
+                    {log.description && (
+                      <p className="text-gray-700 mb-3">{log.description}</p>
+                    )}
+                    {log.photo_url && (
+                      <img
+                        src={`http://localhost:8000${log.photo_url}`}
+                        alt="Activity photo"
+                        className="w-full max-w-md h-auto rounded-lg border"
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-
-        {/* Orange Card */}
-        <div className="flex bg-white rounded-[40px] border-[5px] sm:border-[6px] border-[#ff7a00] w-full p-6 sm:p-8 md:p-10 shadow-[8px_10px_15px_rgba(0,0,0,0.15)] items-stretch">
-          <div className="w-[45%] flex items-center pr-2 sm:pr-8">
-            <ActivityIconGrid icons={ACTIVITY_ICONS_SET_2} />
-          </div>
-          <div className="w-[55%] flex items-center justify-end">
-            <p className="text-right text-[#ff7a00] font-black text-lg sm:text-[20px] md:text-[23px] leading-tight">
-              {loremText}
-            </p>
-          </div>
-        </div>
-
-        {/* Green Card */}
-        <div className="flex bg-white rounded-[40px] border-[5px] sm:border-[6px] border-[#5ccc14] w-full p-6 sm:p-8 md:p-10 shadow-[8px_10px_15px_rgba(0,0,0,0.15)] items-stretch">
-          <div className="w-[45%] flex items-center pr-2 sm:pr-8">
-            <ActivityIconGrid icons={ACTIVITY_ICONS_SET_3} />
-          </div>
-          <div className="w-[55%] flex items-center justify-end">
-            <p className="text-right text-[#5ccc14] font-black text-lg sm:text-[20px] md:text-[23px] leading-tight">
-              {loremText}
-            </p>
-          </div>
-        </div>
-
+        )}
       </div>
 
       {/* Bottom Nav Bar */}
@@ -125,20 +207,3 @@ export default function ActivitiesPage() {
     </main>
   );
 }
-
-// Props-based icon grid with real Lucide icons
-const ActivityIconGrid = ({ icons }: { icons: React.ElementType[] }) => {
-  return (
-    <div className="grid grid-cols-4 grid-rows-2 gap-x-2 sm:gap-x-4 gap-y-6 w-full max-w-[250px]">
-      {icons.map((Icon, i) => (
-        <div key={i} className="flex justify-center items-center">
-          <Icon
-            className="w-8 h-8 sm:w-10 sm:h-10"
-            color="#a0b5c9"
-            strokeWidth={1.5}
-          />
-        </div>
-      ))}
-    </div>
-  );
-};

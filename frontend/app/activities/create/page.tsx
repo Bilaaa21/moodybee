@@ -1,19 +1,19 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { IconBook, IconCirclePlus, IconDocument } from "@/app/components/icons";
 import Link from "next/link";
 import {
   Bed,
   Utensils,
-  BookOpen,
+  Dumbbell,
   Music,
   Sun,
   Coffee,
-  Dumbbell,
   HeartPulse,
+  BookOpen,
   Bike,
   Pencil,
-  Gamepad2,
+  Gamepad,
   ShoppingBag,
   Users,
   Plane,
@@ -23,8 +23,8 @@ import {
   Smile,
   Star,
   Moon,
-  BookMarked,
-  Tv2,
+  Bookmark,
+  Tv,
   UtensilsCrossed,
   Headphones,
   Dog,
@@ -32,54 +32,118 @@ import {
   Baby,
   Glasses,
   Scissors,
-  Flower2,
+  Flower,
   Wind,
-  Umbrella,
-  LucideIcon,
+  Umbrella
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-const ALL_ACTIVITY_ICONS: { icon: LucideIcon; label: string }[] = [
-  { icon: Bed, label: "Sleep" },
-  { icon: Utensils, label: "Eat" },
-  { icon: Dumbbell, label: "Exercise" },
-  { icon: Music, label: "Music" },
-  { icon: Sun, label: "Sunny" },
-  { icon: Coffee, label: "Coffee" },
-  { icon: HeartPulse, label: "Health" },
-  { icon: BookOpen, label: "Read" },
-  { icon: Bike, label: "Bike" },
-  { icon: Pencil, label: "Write" },
-  { icon: Gamepad2, label: "Gaming" },
-  { icon: ShoppingBag, label: "Shop" },
-  { icon: Users, label: "Friends" },
-  { icon: Plane, label: "Travel" },
-  { icon: TreePine, label: "Nature" },
-  { icon: Home, label: "Home" },
-  { icon: Stethoscope, label: "Doctor" },
-  { icon: Smile, label: "Happy" },
-  { icon: Star, label: "Star" },
-  { icon: Moon, label: "Night" },
-  { icon: BookMarked, label: "Study" },
-  { icon: Tv2, label: "TV" },
-  { icon: UtensilsCrossed, label: "Cook" },
-  { icon: Headphones, label: "Listen" },
-  { icon: Dog, label: "Pet" },
-  { icon: Bath, label: "Relax" },
-  { icon: Baby, label: "Family" },
-  { icon: Glasses, label: "Class" },
-  { icon: Scissors, label: "Haircut" },
-  { icon: Flower2, label: "Skincare" },
-  { icon: Wind, label: "Meditate" },
-  { icon: Umbrella, label: "Rainy" },
-];
+interface Activity {
+  id_activity: number;
+  nama_aktivitas: string;
+  icon: string;
+}
+
+const iconMap = {
+  Bed, Utensils, Dumbbell, Music, Sun, Coffee, HeartPulse, BookOpen, Bike, Pencil, Gamepad, ShoppingBag, Users, Plane, TreePine, Home, Stethoscope, Smile, Star, Moon, Bookmark, Tv, UtensilsCrossed, Headphones, Dog, Bath, Baby, Glasses, Scissors, Flower, Wind, Umbrella
+};
 
 export default function CreateActivityPage() {
-  const [selectedIcons, setSelectedIcons] = useState<number[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [selectedActivityIds, setSelectedActivityIds] = useState<number[]>([]);
+  const [description, setDescription] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-  const toggleIcon = (index: number) => {
-    setSelectedIcons((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-    );
+  useEffect(() => {
+    fetchActivities();
+  }, []);
+
+  const fetchActivities = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        setError("No auth token found");
+        return;
+      }
+
+      const response = await fetch("http://localhost:8000/api/activities", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch activities");
+      }
+
+      const data = await response.json();
+      setActivities(data.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    }
+  };
+
+  const getIconComponent = (iconName: string) => {
+    const IconComponent = (iconMap as any)[iconName];
+    return IconComponent ? <IconComponent className="w-6 h-6 sm:w-7 sm:h-7" /> : <div>?</div>;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedActivityIds.length === 0) {
+      setError("Please select at least one activity");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        throw new Error("No auth token found. Please login first.");
+      }
+
+      const formData = new FormData();
+      selectedActivityIds.forEach(id => formData.append("activity_ids[]", id.toString()));
+      formData.append("description", description);
+      formData.append("date", date);
+      if (photo) {
+        formData.append("photo", photo);
+      }
+
+      const response = await fetch("http://localhost:8000/api/activities/logs", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type");
+        let errorMessage = "Failed to create activity";
+        
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || "Failed to create activity";
+        } else {
+          errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+      router.push("/activities");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -115,35 +179,40 @@ export default function CreateActivityPage() {
 
       {/* Main Content */}
       <div className="pt-28 pb-10 px-4 sm:px-8 md:px-14 max-w-7xl mx-auto h-auto md:h-[calc(100vh-120px)] min-h-[800px]">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full items-stretch">
-
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full items-stretch">
           {/* LEFT ICON PICKER */}
           <div className="bg-white rounded-[40px] border-[5px] sm:border-[6px] border-[#ff7a00] p-6 lg:p-8 flex flex-col h-full items-center shadow-[0px_4px_10px_rgba(0,0,0,0.05)] overflow-hidden">
             <p className="text-[#ff7a00] font-bold text-sm mb-4 self-start">
               Tap to select your activities
             </p>
             <div className="grid grid-cols-4 gap-2 w-full overflow-y-auto flex-1 pr-1">
-              {ALL_ACTIVITY_ICONS.map(({ icon: Icon, label }, i) => {
-                const isSelected = selectedIcons.includes(i);
+              {activities.map((activity) => {
+                const isSelected = selectedActivityIds.includes(activity.id_activity);
                 return (
                   <button
-                    key={i}
-                    onClick={() => toggleIcon(i)}
-                    title={label}
+                    key={activity.id_activity}
+                    type="button"
+                    onClick={() => {
+                      setSelectedActivityIds(prev =>
+                        prev.includes(activity.id_activity)
+                          ? prev.filter(id => id !== activity.id_activity)
+                          : [...prev, activity.id_activity]
+                      );
+                    }}
+                    title={activity.nama_aktivitas}
                     className={`flex flex-col justify-center items-center gap-1 rounded-xl p-2 transition-all duration-200 active:scale-95
                       ${isSelected
                         ? "bg-[#ff7a00] shadow-sm"
                         : "bg-gray-50 hover:bg-orange-50"
                       }`}
                   >
-                    <Icon
-                      className={`w-6 h-6 sm:w-7 sm:h-7 transition-colors duration-200 ${isSelected ? "text-white" : "text-[#a0b5c9]"}`}
-                      strokeWidth={1.5}
-                    />
+                    <div className={isSelected ? "text-white" : "text-[#a0b5c9]"}>
+                      {getIconComponent(activity.icon)}
+                    </div>
                     <span
                       className={`text-[8px] font-semibold truncate w-full text-center transition-colors duration-200 ${isSelected ? "text-white" : "text-gray-400"}`}
                     >
-                      {label}
+                      {activity.nama_aktivitas}
                     </span>
                   </button>
                 );
@@ -153,31 +222,44 @@ export default function CreateActivityPage() {
 
           {/* RIGHT COLUMN */}
           <div className="flex flex-col h-full gap-6">
-
-            {/* Selected icons preview */}
-            {selectedIcons.length > 0 && (
+            {/* Selected activities preview */}
+            {selectedActivityIds.length > 0 && (
               <div className="bg-orange-50 rounded-[24px] border-[3px] border-[#ff7a00] px-5 py-3 flex flex-wrap gap-2 items-center">
                 <span className="text-[#ff7a00] font-bold text-xs mr-1">Selected:</span>
-                {selectedIcons.map((idx) => {
-                  const { icon: Icon, label } = ALL_ACTIVITY_ICONS[idx];
-                  return (
+                {selectedActivityIds.map(id => {
+                  const activity = activities.find(a => a.id_activity === id);
+                  return activity ? (
                     <div
-                      key={idx}
+                      key={id}
                       className="flex items-center gap-1 bg-[#ff7a00] rounded-full px-2 py-1"
                     >
-                      <Icon className="w-4 h-4 text-white" strokeWidth={2} />
-                      <span className="text-white text-[10px] font-semibold">{label}</span>
+                      <div className="text-white">{getIconComponent(activity.icon)}</div>
+                      <span className="text-white text-[10px] font-semibold">{activity.nama_aktivitas}</span>
                     </div>
-                  );
+                  ) : null;
                 })}
               </div>
             )}
+
+            {/* Date Input */}
+            <div className="bg-white rounded-[30px] border-[4px] border-[#ff7a00] p-5 shadow-[0px_4px_10px_rgba(0,0,0,0.05)]">
+              <label className="block text-[#ff7a00] font-black text-base sm:text-lg mb-3">
+                Date
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full bg-transparent border-0 outline-none text-gray-700 font-medium"
+                required
+              />
+            </div>
 
             {/* Write Down Box */}
             <div className="bg-white rounded-[30px] border-[4px] border-[#ff7a00] p-5 flex flex-col flex-[0.5] shadow-[0px_4px_10px_rgba(0,0,0,0.05)] relative">
               <div className="flex items-center gap-2 mb-3">
                 <h2 className="text-[#ff7a00] font-black text-base sm:text-lg">
-                  Write down about your activities
+                  Write down about your activity
                 </h2>
                 <svg
                   width="20"
@@ -190,6 +272,8 @@ export default function CreateActivityPage() {
                 </svg>
               </div>
               <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 className="w-full flex-1 resize-none bg-transparent border-0 outline-none text-gray-700 text-sm placeholder-gray-300 font-medium leading-relaxed border-b-[2px] border-gray-200 focus:border-[#ff7a00] transition-colors duration-200 pb-1"
                 placeholder="Type your activity notes here..."
                 rows={3}
@@ -198,24 +282,53 @@ export default function CreateActivityPage() {
 
             {/* Upload Box */}
             <div className="bg-white rounded-[30px] border-[4px] border-[#ff7a00] p-5 flex flex-col flex-[0.6] shadow-[0px_4px_10px_rgba(0,0,0,0.05)] relative">
-              <h2 className="text-[#ff7a00] font-black text-base sm:text-lg">
-                Wanna up a picture?
+              <h2 className="text-[#ff7a00] font-black text-base sm:text-lg mb-4">
+                Wanna upload a picture?
               </h2>
-
-              <div className="flex-1 flex items-center justify-center pt-4">
-                <button className="bg-[#ff7a00] hover:bg-[#e66c00] text-white font-bold text-base sm:text-lg py-2 px-10 rounded-[16px] transition transform hover:scale-105">
-                  Upload
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setPhoto(e.target.files?.[0] || null)}
+                className="hidden"
+                id="photo-upload"
+              />
+              <label
+                htmlFor="photo-upload"
+                className="flex-1 flex items-center justify-center pt-4 cursor-pointer"
+              >
+                <button
+                  type="button"
+                  className="bg-[#ff7a00] hover:bg-[#e66c00] text-white font-bold text-base sm:text-lg py-2 px-10 rounded-[16px] transition transform hover:scale-105"
+                >
+                  {photo ? photo.name : "Upload"}
                 </button>
-              </div>
+              </label>
+              {photo && (
+                <img
+                  src={URL.createObjectURL(photo)}
+                  alt="Preview"
+                  className="mt-4 w-full max-w-xs h-auto rounded-lg border mx-auto"
+                />
+              )}
             </div>
 
-            {/* Save Button */}
-            <button className="bg-[#ff7a00] hover:bg-[#e66c00] text-white font-black text-base sm:text-lg py-3 rounded-[16px] w-full transition shrink-0 transform hover:scale-[1.02]">
-              Save
-            </button>
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            )}
 
+            {/* Save Button */}
+            <button
+              type="submit"
+              disabled={loading || selectedActivityIds.length === 0}
+              className="bg-[#ff7a00] hover:bg-[#e66c00] disabled:bg-gray-400 text-white font-black text-base sm:text-lg py-3 rounded-[16px] w-full transition shrink-0 transform hover:scale-[1.02] disabled:transform-none"
+            >
+              {loading ? "Saving..." : "Save"}
+            </button>
           </div>
-        </div>
+        </form>
       </div>
 
       {/* Bottom Nav Bar */}

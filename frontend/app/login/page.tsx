@@ -16,15 +16,15 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/login", {
+      const response = await fetch("http://localhost:8000/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
         },
         body: JSON.stringify({
-        username: username, // Sesuaikan dengan key di Controller Laravel-mu
-          password: password,
+          username: username || "test", // Default test user
+          password: password || "password", // Default test password
         }),
       });
 
@@ -53,7 +53,7 @@ export default function LoginPage() {
         </h1>
 
         <form className="w-full flex flex-col gap-5 sm:gap-6" onSubmit={handleLogin}>
-          
+
           <input
             type="text" // Ganti text ke email jika di Laravel pake email
             placeholder="Username"
